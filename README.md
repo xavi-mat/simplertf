@@ -7,6 +7,16 @@ different formatting options. Properties of paper size and margins are also
 supported.
 By Xavimat.
 
+# TODO
+* Font Table, Color Table, Stylesheet.
+  * Customizable outside the Rtf class, and added later to it.
+  * Default font tables, color tables and stylesheets.
+* Info about languages and language codes.
+  * Table of info about languages.
+  * For example, `Style.lang = "Italian"` will set automatically to 1040.
+* Customizable Footnote options.
+(All this is currentply possible, but only inside the Rtf class, and you'll need to know the codes and variable names.)
+
 Simple example:
 
 ```python
