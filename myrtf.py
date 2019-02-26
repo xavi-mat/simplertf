@@ -13,7 +13,7 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.37"
+__version__ = "0.0.38"
 __author__ = "Xavimat"
 __date__ = "2019-02-26"
 
@@ -573,7 +573,7 @@ class Rtf:
 
     @property
     def par_style(self):
-        """Paragrahp style."""
+        """Default style for paragrahps."""
         return self._par_style.id
     @par_style.setter
     def par_style(self, style):
@@ -582,7 +582,7 @@ class Rtf:
 
     @property
     def note_style(self):
-        """Note style."""
+        """Default style for footnotes."""
         return self._note_style.id
     @note_style.setter
     def note_style(self, style):
