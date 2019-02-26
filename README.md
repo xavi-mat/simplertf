@@ -7,7 +7,7 @@ different formatting options. Properties of paper size and margins are also
 supported.
 By Xavimat.
 
-# TODO
+## TODO
 * Font Table, Color Table, Stylesheet.
   * Customizable outside the Rtf class, and added later to it.
   * Default font tables, color tables and stylesheets.
@@ -17,7 +17,7 @@ By Xavimat.
 * Customizable Footnote options.
 (All this is currentply possible, but only inside the Rtf class, and you'll need to know the codes and variable names.)
 
-Simple example:
+## Simple example
 
 ```python
 import myrtf
