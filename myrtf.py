@@ -404,8 +404,8 @@ class Rtf:
         self._t("{\\pard " + style.apply)
         self._t2(txt)
 
-        self._log('Open paragraph:', end='')
-        if txt: self._log(' ' + txt, end='')
+        self._log('Open paragraph:')
+        if txt: self._log(txt, end=' ')
 
 
     def close_par(self):
@@ -437,7 +437,7 @@ class Rtf:
 
         if format: self._t("}")
 
-        self._log(' ' + txt, end='')
+        self._log(txt, end=' ')
 
 
     # Text-like function. Add italic text.
@@ -465,7 +465,8 @@ class Rtf:
         self._t(style.apply)
         self._t2(txt)
 
-        self._log('\n Open footnote:', end='')
+        self._log('\n - Open footnote:')
+        if txt: self._log(txt, end=' ')
 
 
     def close_note(self):
@@ -473,7 +474,7 @@ class Rtf:
         if self._noteopen:
             self._t("}}\n")
             self._noteopen = False
-            self._log('\n Close footnote. ', end='')
+            self._log('\n - Close footnote.')
 
 
     def set_layout(self, default="", ph="", pw="", mt="", mb="", ml="", mr=""):
