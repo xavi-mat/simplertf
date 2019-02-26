@@ -3,9 +3,9 @@
 """
 Simple RTF creator.
 
-Constants, classes and functions to create a simple rtf file.
+Constants, classes and functions to create simple rtf documents.
 Main 'Rtf' class defines objects where add paragraphs, footnotes, and text with
-different formatting options. Properties of paper size and margins ar also
+different formatting options. Properties of paper size and margins are also
 supported.
 By Xavimat.
 """
@@ -13,7 +13,7 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.34"
+__version__ = "0.0.37"
 __author__ = "Xavimat"
 __date__ = "2019-02-26"
 
@@ -24,6 +24,10 @@ CM2TW = 566.929133858
 TW2CM = 1.0 / CM2TW
 IN2TW = 1440
 TW2IN = 1.0 / IN2TW
+
+_fonts = {}
+_colors = {}
+_styles = {}
 
 
 def rtf_encode(text):
@@ -67,6 +71,8 @@ class Font:
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
+        _fonts[id] = self
+
     @property
     def output(self):
         """Text to create the font table."""
@@ -81,11 +87,14 @@ class Font:
 class Color:
     """Colors for the color table."""
 
-    def __init__(self, red=0, green=0, blue=0):
+    def __init__(self, id, red=0, green=0, blue=0):
         """Register a new color for the color table."""
+        self.id = id
         self.red = red
         self.green = green
         self.blue = blue
+
+        _colors[id] = self
 
     @property
     def output(self):
@@ -105,6 +114,9 @@ class Style:
         self.id = id
         self.name = name
         self.sbasedon = id
+        if "sbasedon" in kwargs:
+            self.sbasedon = kwargs["sbasedon"]
+            # TODO: Use all attributes of style (but where is it?)
         self.snext = id
         self.align = "qj"  # qc, qj, ql, qr (center, justified, left, right)
         self.f = ""  # font id (defined in font table)
@@ -131,6 +143,8 @@ class Style:
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
+
+        _styles[id] = self
 
     @property
     def apply(self):
@@ -192,9 +206,9 @@ class Rtf:
         Font("f3", "Linux Biolinum", family="fswiss"),
         ]
     _colortable = [
-        Color(red=128, green=128, blue=128),      # Grey
-        Color(red=128, green=64, blue=0),         # Orange
-        Color(red=255, green=255, blue=255),      # White
+        Color("1", red=128, green=128, blue=128),      # Grey
+        Color("2", red=128, green=64, blue=0),         # Orange
+        Color("3", red=255, green=255, blue=255),      # White
         ]
     _stylesheet = [
         Style("s0", "Default"),
@@ -203,18 +217,18 @@ class Rtf:
             align="qj", rtlpar=True, lang="1037"),
         Style("s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
             fi="-227"),
-        Style("s24", "Nota hebreu", sbasedon="s23", f="f2", fs="22", lang="1307"),
+        Style("s24", "Nota hebreu", sbasedon="s23", f="f2", fs="22",
+            lang="1307"),
         Style("s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
             b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609"),
-        Style("s26", "Nota normal", sbasedon="s23", f="f1", fs="20", li="227", fi="-227",
-            lang="1027"),  # Catalan
+        Style("s26", "Nota normal", sbasedon="s23", f="f1", fs="20", li="227",
+            fi="-227", lang="1027"),  # Catalan
         Style("s27", "Normal grec", sbasedon="s21", f="f1", fs="24", sl="276",
             hyphpar=True, lang="1609"),  # Ancient Greek
-        Style("s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql", keepn=True,
-            f="f1", fs="4", cf="3", lang="1609"),
-        Style("s29", "Nota italia", sbasedon="s23", f="f1", fs="20", li="227", fi="-227",
-            hyphpar=True, lang="1040"),  # Italian
-
+        Style("s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
+            keepn=True, f="f1", fs="4", cf="3", lang="1609"),
+        Style("s29", "Nota italia", sbasedon="s23", f="f1", fs="20", li="227",
+            fi="-227", hyphpar=True, lang="1040"),  # Italian
         ]
 
     author = "author"
