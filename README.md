@@ -15,7 +15,8 @@ By Xavimat.
   * Table of info about languages.
   * For example, `Style.lang = "Italian"` will set automatically to 1040.
 * Customizable Footnote options.
-(All this is currentply possible, but only inside the Rtf class, and you'll need to know the codes and variable names.)
+
+(All this is currently possible, but only inside the Rtf class, and you'll need to know the codes and variable names.)
 
 ## Simple example
 
