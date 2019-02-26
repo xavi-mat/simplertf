@@ -114,9 +114,6 @@ class Style:
         self.id = id
         self.name = name
         self.sbasedon = id
-        if "sbasedon" in kwargs:
-            self.sbasedon = kwargs["sbasedon"]
-            # TODO: Use all attributes of style (but where is it?)
         self.snext = id
         self.align = "qj"  # qc, qj, ql, qr (center, justified, left, right)
         self.f = ""  # font id (defined in font table)
@@ -140,6 +137,10 @@ class Style:
         self.li = ""  # Left indent in twips (default is 0).
         self.ri = ""  # Right indent in twips (default is 0).
         self.lang = ""  # language code (see code tables)
+
+        if "sbasedon" in kwargs:
+            self.sbasedon = kwargs["sbasedon"]
+            # TODO: Use all attributes of style (search in _styles dict.)
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
