@@ -5,7 +5,7 @@ import myrtf
 r = myrtf.Rtf("My Document Title", verbose=True)
 
 r.author = "Myself"
-r.set_layout("A4")
+r.set_layout("A4")  # The same result using r.layout = "A4"
 
 r.par("This text starts a paragraph.")
 r.text(" This text continues the paragraph, note the space before 'This'.")
