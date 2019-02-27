@@ -13,7 +13,7 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.43"
+__version__ = "0.0.50"
 __author__ = "Xavimat"
 __date__ = "2019-02-27"
 
@@ -27,7 +27,6 @@ TW2IN = 1.0 / IN2TW
 
 _fonts = {}
 _colors = {}
-_styles = {}
 
 
 def rtf_encode(text):
@@ -60,7 +59,7 @@ def totwip(m):
 class Font(object):
     """Fonts for the font table."""
 
-    def __init__(self, id, fontname, family='fnil', fprq='', fcharset=''):
+    def __init__(self, id, fontname, family='fnil', fprq='', fcharset='', falt=""):
         """
         Register a new font for the font table.
 
@@ -70,6 +69,7 @@ class Font(object):
         - fpqr: (str)  # pitch
         - fcharset: (str)
         - fontname: (str)
+        - falt: (str) alternate font name to use if the fontname is not available.
 
         """
         if id[0] != 'f' or not id[1:].isdigit():
@@ -80,6 +80,7 @@ class Font(object):
         self.family = family
         self.fprq = fprq
         self.fcharset = fcharset
+        self.falt = falt
 
         _fonts[id] = self
 
@@ -90,7 +91,9 @@ class Font(object):
         o += "\\" + self.family
         if self.fprq: o += "\\fprq" + self.fprq
         if self.fcharset: o += "\\fcharset" + self.fcharset
-        o += " " + self.fontname + ";}\n"
+        o += " " + self.fontname
+        if self.falt: o += "{\\*\\falt " + self.falt + "}"
+        o += ";}\n"
         return o
 
 
@@ -126,35 +129,100 @@ class Color:
         return o
 
 
+class Stylesheet(object):
+
+    def __init__(self, name=""):
+        self.name = name
+        self._styles = {}
+        _Style(self, "s0", "Default")
+
+    def new_style(self, id, name, **kwargs):
+        """Create a new style for the stylesheet."""
+        _Style(self, **kwargs)
+
+    def add_style(self, style):
+        """Add style to stylesheet."""
+        if self._styles:
+
+            maxkey = max(self._styles.keys())
+
+            if style.key < maxkey:
+                maxid = self.style(maxkey).id
+                raise ValueError('Styles must be added in order. Can\'t add "' +
+                    style.id + '" after "' + maxid + '".')
+
+            if style.key in self._styles:
+                raise ValueError('Can\'t overwrite style "' + style.id + '".')
+
+        self._styles[style.key] = style
+
+    def del_style(self, style):
+        """
+        Delete style from stylesheet.
+
+        Not yet implemented.
+        # TODO: inform of other styles being based on this one.
+        # TODO: delete style only if no other styles are "based on" this one.
+        """
+        print("Not yet implemented.")
+
+    def style(self, keyid):
+        """Return style by 'key' or 'id'."""
+        if keyid in self._styles:
+            return self._styles[keyid]
+
+        for i in self._styles.values():
+            if keyid == i.id:
+                return i
+
+        raise ValueError('Style "' + str(keyid) + '" not in stylesheet.')
+
+    @property
+    def output(self):
+        """Output of the Stylesheet for the rtf file."""
+        o = "{\\stylesheet\n"
+
+        for style in self._styles.values():
+            o += style.output
+
+        o += "}\n"
+
+        return o
+
+
 def _check_style_id(id):
-    """Chek if 'id' has the correct format for a Style ('sN', 'csN')."""
+    """Check if 'id' has the correct format for a Style ('sN', 'csN')."""
     if id[0] == 's':
         if not id[1:].isdigit():
             raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+        key = int(id[1:])
     elif id[0:2] == 'cs':
         if not id[2:].isdigit():
             raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+        key = int(id[2:])
     else:
         raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+    return key
 
 
-class Style:
+class _Style(object):
     """Styles for the stylesheet."""
 
-    def __init__(self, id, name, **kwargs):
+    def __init__(self, sheet, id, name, **kwargs):
         """Register a new style for the stylesheet."""
 
-        _check_style_id(id)
+        key = _check_style_id(id)
 
-        accepted = ['id', 'name', 'sbasedon', 'snext', 'align', 'f', 'fs', 'sl', 'sb', 'sa', 'keepn', 'b', 'i', 'scaps', 'caps', 'widctlpar', 'nowidctlpar', 'hyphpar', 'rtlpar', 'ltrpar', 'cf', 'fi', 'li', 'ri', 'lang']
+        accepted = ['sbasedon', 'snext', 'align', 'f', 'fs', 'sl', 'sb', 'sa', 'keepn', 'b', 'i', 'scaps', 'caps', 'widctlpar', 'nowidctlpar', 'hyphpar', 'rtlpar', 'ltrpar', 'cf', 'fi', 'li', 'ri', 'lang']
 
         not_accepted = set(kwargs.keys()) - set(accepted)
 
         if not_accepted:
             raise ValueError('Arguments not accepted in Styles: ' + str(not_accepted))
 
+        self.key = key
         self.id = id
-        self.name = name
+        self.name = rtf_encode(name)
         self.sbasedon = id
         self.snext = id
         self.align = "qj"  # qc, qj, ql, qr (center, justified, left, right)
@@ -184,9 +252,9 @@ class Style:
 
             id2 = kwargs["sbasedon"]  # 'id' of base style.
 
-            _check_style_id(id2)
+            key2 = _check_style_id(id2)
 
-            base_style = _styles[id2]  # Will throw an error if not found.
+            base_style = sheet.style(key2)
 
             for i in accepted:
                 setattr(self, i, getattr(base_style, i))
@@ -197,10 +265,10 @@ class Style:
         if 'snext' in kwargs:
             _check_style_id(kwargs['snext'])
 
-        for key in kwargs:
-            setattr(self, key, kwargs[key])
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
-        _styles[id] = self  # TODO: better if keys are integers, to avoid paragraph styles and character styles having the same number in the 'id'.
+        sheet.add_style(self)
 
     @property
     def apply(self):
@@ -246,6 +314,51 @@ class Style:
         o += "}\n"
         return o
 
+stylesheets =  {}
+_sheet = Stylesheet("Hebrew-Catalan")
+_Style(_sheet, "s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1024")
+_Style(_sheet, "s22", "Normal hebreu", sbasedon="s21", f="f2", fs="24",
+    align="qj", rtlpar=True, lang="1037")
+_Style(_sheet, "s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
+    fi="-227")
+_Style(_sheet, "s24", "Nota hebreu", sbasedon="s23", f="f2", fs="22",
+    lang="1307")
+_Style(_sheet, "s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
+    b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609")
+_Style(_sheet, "s26", "Nota normal", sbasedon="s23", f="f1", fs="20", li="227",
+    fi="-227", lang="1027")  # Catalan
+_Style(_sheet, "s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
+    keepn=True, f="f1", fs="4", cf="3", lang="1609")
+stylesheets["Hebrew-Catalan"] = _sheet
+
+_sheet = Stylesheet("Greek-Italian")
+_Style(_sheet, "s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1024"),
+_Style(_sheet, "s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
+    fi="-227"),
+_Style(_sheet, "s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
+    b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609"),
+_Style(_sheet, "s27", "Normal grec", sbasedon="s21", f="f1", fs="24", sl="276",
+    hyphpar=True, lang="1609"),  # Ancient Greek
+_Style(_sheet, "s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
+    keepn=True, f="f1", fs="4", cf="3", lang="1609"),
+_Style(_sheet, "s29", "Nota italia", sbasedon="s23", f="f1", fs="20", li="227",
+    fi="-227", hyphpar=True, lang="1040"),  # Italian
+stylesheets["Greek-Italian"] = _sheet
+
+_sheet = Stylesheet("Greek-Spanish")
+_Style(_sheet, "s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1024"),
+_Style(_sheet, "s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
+    fi="-227"),
+_Style(_sheet, "s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
+    b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609"),
+_Style(_sheet, "s26", "Nota Spanish", sbasedon="s23", f="f1", fs="20", li="227",
+    fi="-227", lang="1034"),  # Spanish (Castilian)
+_Style(_sheet, "s27", "Normal grec", sbasedon="s21", f="f1", fs="24", sl="276",
+    hyphpar=True, lang="1609"),  # Ancient Greek
+_Style(_sheet, "s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
+    keepn=True, f="f1", fs="4", cf="3", lang="1609"),
+stylesheets["Greek-Spanish"] = _sheet
+
 
 class Rtf:
     """
@@ -266,26 +379,7 @@ class Rtf:
         Color("2", red=128, green=64, blue=0),         # Orange
         Color("3", red=255, green=255, blue=255),      # White
         ]
-    _stylesheet = [
-        Style("s0", "Default"),
-        Style("s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1024"),
-        Style("s22", "Normal hebreu", sbasedon="s21", f="f2", fs="24",
-            align="qj", rtlpar=True, lang="1037"),
-        Style("s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
-            fi="-227"),
-        Style("s24", "Nota hebreu", sbasedon="s23", f="f2", fs="22",
-            lang="1307"),
-        Style("s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
-            b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609"),
-        Style("s26", "Nota normal", sbasedon="s23", f="f1", fs="20", li="227",
-            fi="-227", lang="1027"),  # Catalan
-        Style("s27", "Normal grec", sbasedon="s21", f="f1", fs="24", sl="276",
-            hyphpar=True, lang="1609"),  # Ancient Greek
-        Style("s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
-            keepn=True, f="f1", fs="4", cf="3", lang="1609"),
-        Style("s29", "Nota italia", sbasedon="s23", f="f1", fs="20", li="227",
-            fi="-227", hyphpar=True, lang="1040"),  # Italian
-        ]
+    _stylesheet = Stylesheet()
 
     author = "author"
     _ftn_options = {
@@ -326,8 +420,8 @@ class Rtf:
         self._all_lines = []
         self._paropen = False
         self._noteopen = False
-        self._par_style = self._stylesheet[0]
-        self._note_style = self._stylesheet[3]
+        self._par_style = self._stylesheet.style(0)
+        self._note_style = self._stylesheet.style(0)
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
@@ -386,10 +480,11 @@ class Rtf:
         self._a("}\n")
 
         # Style sheet
-        self._a("{\\stylesheet\n")
-        for style in self._stylesheet:
-            self._a(style.output)
-        self._a("}\n")
+        #self._a("{\\stylesheet\n")
+        #for style in self._stylesheet.values():
+        #    self._a(style.output)
+        #self._a("}\n")
+        self._a(self._stylesheet.output)
 
         # Generator
         self._a("{\\*\\generator myrtf_by_xavimat_" + __version__ + "}\n")
@@ -607,12 +702,21 @@ class Rtf:
         self.set_layout(layout)
 
 
-    def styles(self):
-        """
-        Add styles to the stylesheet.
-        Not yet implemented.
-        """
-        print("Not yet implemented.")
+    @property
+    def stylesheet(self):
+        return self._stylesheet.output
+    @stylesheet.setter
+    def stylesheet(self, default):
+        if default not in stylesheets:
+            raise ValueError('Default stylesheet "' + default + '" not found.')
+        self._stylesheet = stylesheets[default]
+        self._log('Stylesheet set to "' + default + '".')
+
+
+    def new_style(self, id, name, **kwargs):
+        """Create a style-object and add it to the stylesheet."""
+        _Style(self._stylesheet, id, name, **kwargs)
+        self._log('New style "' + id + '" added to the stylesheet.')
 
 
     def set_style(self, style, typ="par"):
@@ -645,9 +749,9 @@ class Rtf:
         self.set_style(style, typ="note")
 
 
-    def _search_style(self, style, typ="par"):
+    def _search_style(self, keyid, typ="par"):
         """
-        Return a Style object of style==object.id.
+        Return a Style object by 'key' or 'id'.
         Or the default, according to 'typ'.
         """
         if typ == "note":
@@ -655,13 +759,14 @@ class Rtf:
         else:
             default = self._par_style
 
-        for i in self._stylesheet:
-            if i.id == style:
-                return i
+        #for i in self._stylesheet.values():
+        #    if i.id == keyid:
+        #        return i
 
-        if style:
-            self._log('Style "' + style + '" not found. Defaulting to "' +
-                default.id + '".')
+        if keyid:
+            return self._stylesheet.style(keyid)
+            #self._log('Style "' + keyid + '" not found. Defaulting to "' +
+            #    default.id + '".')
 
         return default
 
