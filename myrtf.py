@@ -13,7 +13,7 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.38"
+__version__ = "0.0.40"
 __author__ = "Xavimat"
 __date__ = "2019-02-26"
 
@@ -380,7 +380,7 @@ class Rtf:
         # CLOSING
         self._a("\\par }")
 
-        self._log('EXPORTING "' + self.title + '" as "' + self.filename + '"...')
+        self._log('EXPORTING "' + self.title + '" as "' + self.filename + '.rtf"...')
         with open(self.filename+".rtf", "w+") as t:
 
             for i in self._all_lines:
@@ -404,8 +404,8 @@ class Rtf:
         self._t("{\\pard " + style.apply)
         self._t2(txt)
 
-        self._log('Open paragraph:')
-        if txt: self._log(txt, end=' ')
+        self._log('(Open paragraph:)', end=' ')
+        if txt: self._log(txt, end='')
 
 
     def close_par(self):
@@ -416,7 +416,7 @@ class Rtf:
         if self._paropen:
             self._t("\\par}\n")
             self._paropen = False
-            self._log('\nClose paragraph.')
+            self._log(' (Close paragraph.)')
 
 
     def text(self, txt, format=""):
@@ -437,7 +437,7 @@ class Rtf:
 
         if format: self._t("}")
 
-        self._log(txt, end=' ')
+        self._log(txt, end='')
 
 
     # Text-like function. Add italic text.
@@ -465,8 +465,8 @@ class Rtf:
         self._t(style.apply)
         self._t2(txt)
 
-        self._log('\n - Open footnote:')
-        if txt: self._log(txt, end=' ')
+        self._log('(Open footnote:) ', end='[')
+        if txt: self._log(txt, end='')
 
 
     def close_note(self):
@@ -474,7 +474,7 @@ class Rtf:
         if self._noteopen:
             self._t("}}\n")
             self._noteopen = False
-            self._log('\n - Close footnote.')
+            self._log('] (Close footnote.)', end='')
 
 
     def set_layout(self, default="", ph="", pw="", mt="", mb="", ml="", mr=""):
