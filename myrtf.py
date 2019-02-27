@@ -13,9 +13,9 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.40"
+__version__ = "0.0.43"
 __author__ = "Xavimat"
-__date__ = "2019-02-26"
+__date__ = "2019-02-27"
 
 from time import strftime as _strftime
 
@@ -57,19 +57,29 @@ def totwip(m):
     raise ValueError('measure impossible to parse: "' + m + '".')
 
 
-class Font:
+class Font(object):
     """Fonts for the font table."""
 
-    def __init__(self, id, fontname, **kwargs):
-        """Register a new font for the font table."""
-        self.id = id
-        self.family = "fnil"  # froman, fswiss, fnil, fbidi...
-        self.fprq = ""  # pitch
-        self.fcharset = ""
-        self.fontname = fontname
+    def __init__(self, id, fontname, family='fnil', fprq='', fcharset=''):
+        """
+        Register a new font for the font table.
 
-        for key in kwargs:
-            setattr(self, key, kwargs[key])
+        kwargs:
+        - id: 'fN', where N is an integer.
+        - family: (str) 'fnil', 'froman', 'fswiss', 'fnil', 'fbidi'...
+        - fpqr: (str)  # pitch
+        - fcharset: (str)
+        - fontname: (str)
+
+        """
+        if id[0] != 'f' or not id[1:].isdigit():
+            raise ValueError('"' + id + '" is not a correct "id" for a Font.')
+
+        self.id = id
+        self.fontname = fontname
+        self.family = family
+        self.fprq = fprq
+        self.fcharset = fcharset
 
         _fonts[id] = self
 
@@ -88,7 +98,17 @@ class Color:
     """Colors for the color table."""
 
     def __init__(self, id, red=0, green=0, blue=0):
-        """Register a new color for the color table."""
+        """
+        Register a new color for the color table.
+
+        Arguments:
+        - id: (str) containing only digits.
+        - red, green, blue: (int) Numbers in range 0-255.
+        """
+
+        if not id.isdigit():
+            raise ValueError('"' + id + '" is not a correct "id" for a Color.')
+
         self.id = id
         self.red = red
         self.green = green
@@ -106,11 +126,33 @@ class Color:
         return o
 
 
+def _check_style_id(id):
+    """Chek if 'id' has the correct format for a Style ('sN', 'csN')."""
+    if id[0] == 's':
+        if not id[1:].isdigit():
+            raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+    elif id[0:2] == 'cs':
+        if not id[2:].isdigit():
+            raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+    else:
+        raise ValueError('"' + id + '" is not a correct "id" for a Style.')
+
+
 class Style:
     """Styles for the stylesheet."""
 
     def __init__(self, id, name, **kwargs):
         """Register a new style for the stylesheet."""
+
+        _check_style_id(id)
+
+        accepted = ['id', 'name', 'sbasedon', 'snext', 'align', 'f', 'fs', 'sl', 'sb', 'sa', 'keepn', 'b', 'i', 'scaps', 'caps', 'widctlpar', 'nowidctlpar', 'hyphpar', 'rtlpar', 'ltrpar', 'cf', 'fi', 'li', 'ri', 'lang']
+
+        not_accepted = set(kwargs.keys()) - set(accepted)
+
+        if not_accepted:
+            raise ValueError('Arguments not accepted in Styles: ' + str(not_accepted))
+
         self.id = id
         self.name = name
         self.sbasedon = id
@@ -118,7 +160,7 @@ class Style:
         self.align = "qj"  # qc, qj, ql, qr (center, justified, left, right)
         self.f = ""  # font id (defined in font table)
         self.fs = ""  # font size
-        self.sl = ""  # Interlineat.
+        self.sl = ""  # Line-spacing.
         self.sb = ""  # Space before in twips (default is 0).
         self.sa = ""  # Space after in twips (default is 0).
         self.keepn = ""  # Keep paragraph with the next paragraph.
@@ -139,13 +181,26 @@ class Style:
         self.lang = ""  # language code (see code tables)
 
         if "sbasedon" in kwargs:
-            self.sbasedon = kwargs["sbasedon"]
-            # TODO: Use all attributes of style (search in _styles dict.)
+
+            id2 = kwargs["sbasedon"]  # 'id' of base style.
+
+            _check_style_id(id2)
+
+            base_style = _styles[id2]  # Will throw an error if not found.
+
+            for i in accepted:
+                setattr(self, i, getattr(base_style, i))
+
+            self.sbasedon = id2
+            self.snext = id
+
+        if 'snext' in kwargs:
+            _check_style_id(kwargs['snext'])
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
-        _styles[id] = self
+        _styles[id] = self  # TODO: better if keys are integers, to avoid paragraph styles and character styles having the same number in the 'id'.
 
     @property
     def apply(self):
