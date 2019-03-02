@@ -8,6 +8,7 @@ supported.
 By Xavimat.
 
 ## TODO
+(I'm currently trying a `simplefodt` creator because rtf was too limited. Leaving this here in case anyone finds it useful.)
 * Font Table, Color Table, Stylesheet.
   * Customizable outside the Rtf class, and added later to it.
   * Default font tables, color tables and stylesheets.
