@@ -13,9 +13,9 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.50"
+__version__ = "0.0.57"
 __author__ = "Xavimat"
-__date__ = "2019-02-27"
+__date__ = "2019-02-28"
 
 from time import strftime as _strftime
 
@@ -131,16 +131,16 @@ class Color:
 
 class Stylesheet(object):
 
-    def __init__(self, name=""):
+    def __init__(self, name="", lang="1024"):
         self.name = name
         self._styles = {}
-        _Style(self, "s0", "Default")
+        _Style(self, "s0", "Default", lang=lang)
 
     def new_style(self, id, name, **kwargs):
         """Create a new style for the stylesheet."""
-        _Style(self, **kwargs)
+        _Style(self, id, name, **kwargs)
 
-    def add_style(self, style):
+    def _add_style(self, style):
         """Add style to stylesheet."""
         if self._styles:
 
@@ -268,7 +268,7 @@ class _Style(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-        sheet.add_style(self)
+        sheet._add_style(self)
 
     @property
     def apply(self):
@@ -331,10 +331,10 @@ _Style(_sheet, "s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
     keepn=True, f="f1", fs="4", cf="3", lang="1609")
 stylesheets["Hebrew-Catalan"] = _sheet
 
-_sheet = Stylesheet("Greek-Italian")
-_Style(_sheet, "s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1024"),
+_sheet = Stylesheet("Greek-Italian", lang="1040")
+_Style(_sheet, "s21", "Normal", sbasedon="s0", f="f1", fs="24", lang="1040"),
 _Style(_sheet, "s23", "Nota", sbasedon="s21", f="f1", fs="18", li="227",
-    fi="-227"),
+    fi="-227", lang="1040"),
 _Style(_sheet, "s25", "Estil_Titols", sbasedon="s21", align="qc", keepn=True,
     b=True, f="f1", fs="28", sb="1132", sa="566", lang="1609"),
 _Style(_sheet, "s27", "Normal grec", sbasedon="s21", f="f1", fs="24", sl="276",
@@ -659,10 +659,10 @@ class Rtf:
         elif default == "LAS":  # size: LAS (17cm, 24cm)
             ph = totwip("24cm")
             pw = totwip("17cm")
-            mt = totwip("2.8cm")
+            mt = totwip("1.9cm")
             mb = totwip("2.5cm")
-            ml = totwip("2cm")
-            mr = totwip("2cm")
+            ml = totwip("2.2cm")
+            mr = totwip("2.3cm")
         elif default:
             raise ValueError("Default layout '" + default + "' does not exist.")
 
@@ -707,10 +707,21 @@ class Rtf:
         return self._stylesheet.output
     @stylesheet.setter
     def stylesheet(self, default):
-        if default not in stylesheets:
+        if type(default) == Stylesheet:
+            self._stylesheet = default
+            self._log('Stylesheet set to "' + default.name + '".')
+        elif default not in stylesheets:
             raise ValueError('Default stylesheet "' + default + '" not found.')
-        self._stylesheet = stylesheets[default]
-        self._log('Stylesheet set to "' + default + '".')
+        else:
+            self._stylesheet = stylesheets[default]
+            self._log('Stylesheet set to "' + default + '".')
+
+
+    def style(self, keyid):
+        """
+        Return style from stylesheet by 'key' or 'id'. Can change style attributes.
+        """
+        return self._stylesheet.style(keyid)
 
 
     def new_style(self, id, name, **kwargs):
