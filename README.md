@@ -1,4 +1,4 @@
-# myrtf
+# simplertf
 Simple RTF creator.
 
 Python module to create simple rtf documents.
