@@ -4,7 +4,7 @@
 Simple RTF creator.
 
 Constants, classes and functions to create simple rtf documents.
-Main 'Rtf' class defines objects where add paragraphs, footnotes, and text with
+Main 'RTF' class defines objects where add paragraphs, footnotes, and text with
 different formatting options. Properties of paper size and margins are also
 supported.
 By Xavimat.
@@ -360,7 +360,7 @@ _Style(_sheet, "s28", "Estil_Titols_Amagats", sbasedon="s0", align="ql",
 stylesheets["Greek-Spanish"] = _sheet
 
 
-class Rtf:
+class RTF:
     """
     Main class. Contains all text, formatting options, information of fonttable
     and stylsheet.
@@ -412,7 +412,7 @@ class Rtf:
 
     def __init__(self, title="Document Title", **kwargs):
         """
-        Register a Rtf object to keep all info and create everything at the end.
+        Register an RTF object to keep all info and create everything at the end.
         """
         self.title = title
         self.filename = title
