@@ -13,11 +13,12 @@ By Xavimat.
 # USEFUL:
 # https://www.oreilly.com/library/view/rtf-pocket-guide/9781449302047/ch01.html
 
-__version__ = "0.0.57"
+__version__ = "0.0.58"
 __author__ = "Xavimat"
-__date__ = "2019-02-28"
+__date__ = "2020-04-04"
 
 from time import strftime as _strftime
+from os import path as _path
 
 # CONSTANTS:
 CM2TW = 566.929133858
@@ -452,7 +453,7 @@ class RTF:
         """
 
         if filename: self.filename = filename
-        if folder: self.filename = folder + "/" + self.filename  # Arg, only Linux.
+        if folder: self.filename = _path.join(folder, self.filename)
 
         self.close_par()
 
@@ -531,6 +532,7 @@ class RTF:
         self._a("\\par }")
 
         self._log('EXPORTING "' + self.title + '" as "' + self.filename + '.rtf"...')
+        
         with open(self.filename+".rtf", "w+") as t:
 
             for i in self._all_lines:
