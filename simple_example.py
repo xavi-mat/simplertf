@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import myrtf
+import simplertf
 
-r = myrtf.Rtf("My Document Title", verbose=True)
+r = simplertf.Rtf("My Document Title", verbose=True)
 
 r.author = "Myself"
 r.set_layout("A4")  # The same result using r.layout = "A4"
