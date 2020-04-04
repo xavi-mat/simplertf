@@ -23,7 +23,7 @@ By Xavimat.
 
 ```python
 import simplertf
-r = simplertf.Rtf("My Document Title")
+r = simplertf.RTF("My Document Title")
 r.author = "Myself"
 r.set_layout("A4")
 r.par("This text starts a paragraph.")
