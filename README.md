@@ -2,7 +2,7 @@
 Simple RTF creator.
 
 Python module to create simple rtf documents.
-Main 'Rtf' class defines objects where add paragraphs, footnotes, and text with
+Main 'RTF' class defines objects where add paragraphs, footnotes, and text with
 different formatting options. Properties of paper size and margins are also
 supported.
 By Xavimat.
@@ -17,7 +17,7 @@ By Xavimat.
   * For example, `Style.lang = "Italian"` will set automatically to 1040.
 * Customizable Footnote options.
 
-(All this is currently possible, but only inside the Rtf class, and you'll need to know the codes and variable names.)
+(All this is currently possible, but only inside the RTF class, and you'll need to know the codes and variable names.)
 
 ## Simple example
 
