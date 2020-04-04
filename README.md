@@ -22,8 +22,8 @@ By Xavimat.
 ## Simple example
 
 ```python
-import myrtf
-r = myrtf.Rtf("My Document Title")
+import simplertf
+r = simplertf.Rtf("My Document Title")
 r.author = "Myself"
 r.set_layout("A4")
 r.par("This text starts a paragraph.")
