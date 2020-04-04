@@ -2,7 +2,7 @@
 
 import simplertf
 
-r = simplertf.Rtf("My Document Title", verbose=True)
+r = simplertf.RTF("My Document Title", verbose=True)
 
 r.author = "Myself"
 r.set_layout("A4")  # The same result using r.layout = "A4"
